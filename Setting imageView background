@@ -1,0 +1,1 @@
+.setTextColor(getBaseContext().getResources().getColorStateList(R.color.red));
