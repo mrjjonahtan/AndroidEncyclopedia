@@ -1,0 +1,19 @@
+Activity版
+通过以下3步，将一个Activity变为模态对话款
+1.在activity的manifest中加上下面的设置：
+Android:theme="@android:style/Theme.Dialog"
+
+2.在onCreate函数中加上下面的代码：
+setFinishOnTouchOutside (false);
+(注意：在setContentView)
+
+3.Override onBackPressed
+@Override public void onBackPressed()
+{ // prevent "back" from leaving this activity }
+第一步使Activity具有dialog的外观。
+第二步使Activity的具有modal diglog的行为特性。
+
+
+
+dialog版本
+Dialog.setCancelable(false);
