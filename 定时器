@@ -1,0 +1,11 @@
+1. final Handler handler = new Handler();  
+2.      Runnable runnable = new Runnable(){  
+3.          @Override  
+4.          public void run() {  
+5.              // TODO Auto-generated method stub  
+6.              // 在此处添加执行的代码  
+7.              handler.postDelayed(this, 50);// 50是延时时长  
+8.          }   
+9.      };   
+10.      handler.postDelayed(runnable, 50);// 打开定时器，执行操作  
+     handler.removeCallbacks(this);// 关闭定时器处理 
