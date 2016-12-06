@@ -1,0 +1,8 @@
+ /**
+      * 判断当前界面是否是桌面
+      */
+     private boolean isHome() {
+         ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+         List<RunningTaskInfo> rti = mActivityManager.getRunningTasks(1);
+         return getHomes().contains(rti.get(0).topActivity.getPackageName());
+     }
