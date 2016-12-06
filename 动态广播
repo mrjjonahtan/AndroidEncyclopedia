@@ -1,0 +1,52 @@
+动态注册函数
+public static IntentFilter makeGattUpdateIntentFilter() {
+		final IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addAction(BroadCastAction.ACTION_GATT_CONNECTED);
+		intentFilter.addAction(BroadCastAction.ACTION_GATT_DISCONNECTED);
+		intentFilter.addAction(BroadCastAction.ACTION_GATT_SERVICES_DISCOVERED);
+		intentFilter.addAction(BroadCastAction.ACTION_DATA_AVAILABLE);
+		intentFilter.addAction(BroadCastAction.ACTION_COMMUNICATION_DEVICE_MESSAGE);
+		intentFilter.addAction(BroadCastAction.ACTION_COMMUNICATION_DEVICE_STATE);
+		return intentFilter;
+	}
+建议在onresume注册
+registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+
+其中mGattUpdateReceiver是接收
+public BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			final String mAction = intent.getAction();
+			if (BroadCastAction.ACTION_DATA_AVAILABLE.equals(mAction)) {
+			}
+		}
+}
+
+广播发送
+Intent intent = new Intent(action);
+sendBroadcast(intent);
+
+注销广播
+unregisterReceiver(mGattUpdateReceiver);
+
+
+
+
+
+监听锁屏的广播
+filter.addAction(Intent.ACTION_SCREEN_ON);
+filter.addAction(Intent.ACTION_SCREEN_OFF);
+filter.addAction(Intent.ACTION_USER_PRESENT);
+接收activity广播
+if(Intent.ACTION_SCREEN_ON.equals(mAction)){
+//开屏
+Log.i(TAG,"开屏");
+}elseif(Intent.ACTION_SCREEN_OFF.equals(mAction)){
+//锁屏
+Log.i(TAG,"锁屏");
+}elseif(Intent.ACTION_USER_PRESENT.equals(mAction)){
+//解锁
+Log.i(TAG,"解锁");
+}
+
