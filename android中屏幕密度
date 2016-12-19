@@ -1,0 +1,7 @@
+AndroidStudio中mipmap对应的大小，其中是以3：4：6：8：12：16已mdpi为基准，如：48*0.75=36
+ldpi      120dpi    3   0.75  36*36
+mdpi      160dpi    4   1.0   48*48
+hpdi      240dpi    6   1.5   72*72
+xhdpi     320dpi    8   2.0   96*96
+xxhdpi    480dpi    12  3.0   144*144
+xxxhdpi   640dpi    16  4.0   192*192
