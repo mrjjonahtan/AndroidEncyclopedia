@@ -1,0 +1,206 @@
+package wuxi.mantoo.intelligentbag.util;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import wuxi.mantoo.intelligentbag.R;
+import wuxi.mantoo.intelligentbag.config.ManUrl;
+import android.content.Context;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class GetVerificationNumber {
+	private final String TAG = "GetVerificationNumber";
+	private boolean flag = true;
+	private Context context;
+	private TextView tv_getverification;
+	private final int VERIFICATION = 0;// 验证码
+	private final int ERROR = 2;
+
+	/** 错误返回提示 */
+
+	public GetVerificationNumber(Context context, TextView tv) {
+		// TODO Auto-generated constructor stub
+		this.context = context;
+		tv_getverification = tv;
+
+	}
+
+	private Handler handler = new Handler() {
+		public void handleMessage(android.os.Message msg) {
+			switch (msg.what) {
+			case VERIFICATION:
+				flag = true;
+				tv_getverification
+						.setBackgroundResource(R.drawable.register_back_true);
+				tv_getverification.setClickable(false);
+				handler.postDelayed(r, 1000);
+				myToast("验证码已发送！");
+				break;
+
+			case ERROR:
+				myToast(msg.obj.toString());
+				break;
+			default:
+				break;
+			}
+		};
+	};
+
+	/** 验证码定时器 */
+	Runnable r = new Runnable() {
+		int i;
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			if (flag) {
+				i = 60;
+			}
+			if (i != 0) {
+				tv_getverification.setText(i + "秒");
+				i--;
+				handler.postDelayed(this, 1000);
+			} else {
+				tv_getverification.setText(R.string.get_verification);
+				tv_getverification
+						.setBackgroundResource(R.drawable.verification_select);
+				tv_getverification.setClickable(true);
+			}
+			flag = false;
+			Log.i(TAG, "i:" + i + " flag:" + flag);
+		}
+	};
+
+	/* show toast */
+	private void myToast(String str) {
+		Toast.makeText(context, str, Toast.LENGTH_SHORT).show();
+	}
+
+	/* get verification method */
+	public void getVerification(final String phoneNumber, final String type) {
+		Log.i(TAG, "getVerification phone" + phoneNumber);
+
+		if (checkPhoneNumber(phoneNumber)) {
+
+			/*
+			 * 访问数据库
+			 */
+			new Thread() {
+
+				public void run() {
+					String target = ManUrl.VERIFICATION; // 要提交的目标地址
+					URL url;
+					try {
+						url = new URL(target);
+						HttpURLConnection urlConn = (HttpURLConnection) url
+								.openConnection(); // 创建一个HTTP连接
+						urlConn.setRequestMethod("POST"); // 指定使用POST请求方式
+						urlConn.setDoInput(true); // 向连接中写入数据
+						urlConn.setDoOutput(true); // 从连接中读取数据
+						urlConn.setUseCaches(false); // 禁止缓存
+						urlConn.setInstanceFollowRedirects(true); // 自动执行HTTP重定向
+						urlConn.setRequestProperty("Content-Type",
+								"application/x-www-form-urlencoded"); // 设置内容类型
+						DataOutputStream out = new DataOutputStream(
+								urlConn.getOutputStream()); // 获取输出流
+						String param = "mobile="
+								+ URLEncoder.encode(phoneNumber, "UTF-8")
+								+ "&authType="
+								+ URLEncoder.encode(type, "UTF-8")//
+								+ "&appkey="//
+								+ URLEncoder.encode("KSAJDHAS123SDAKLLK21",
+										"UTF-8"); // 连接要提交的数
+						out.writeBytes(param);// 将要传递的数据写入数据输出流
+						out.flush(); // 输出缓存
+						out.close(); // 关闭数据输出流
+
+						Log.i(TAG,
+								"getResponseCode:" + urlConn.getResponseCode());
+						if (urlConn.getResponseCode() == HttpURLConnection.HTTP_OK) { // 判断是否响应成功
+							InputStreamReader in = new InputStreamReader(
+									urlConn.getInputStream(), "utf-8"); // 获得读取的内容，utf-8获取内容的编码
+							BufferedReader buffer = new BufferedReader(in); // 获取输入流对象
+							String inputLine = null;
+							while ((inputLine = buffer.readLine()) != null) {
+
+								Log.d(TAG, inputLine + "\n");
+								try {
+									JSONObject reader = new JSONObject(
+											inputLine);// 使用JSONObject解析
+									// JSONObject reObject =
+									// reader.getJSONObject("data");
+									if (reader.getString("code").equals("0")) {
+										// myToast("验证码已发送！");
+										Message msg = new Message();
+										msg.what = VERIFICATION;
+										handler.sendMessage(msg);
+									} else {
+										Message msg = new Message();
+										msg.what = ERROR;
+										msg.obj = reader.get("message");
+										handler.sendMessage(msg);
+									}
+									Log.i(TAG, "result_code:"//
+											+ reader.getString("code")//
+											+ " message:"//
+											+ reader.getString("message")//
+											+ " data:"//
+											+ reader.getString("data")//
+											+ " isSuccess:"//
+											+ reader.getBoolean("isSuccess"));
+
+								} catch (JSONException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+									Log.i(TAG, e.getMessage());
+								}
+							}
+							in.close(); // 关闭字符输入流
+						}
+						urlConn.disconnect(); // 断开连接
+					} catch (MalformedURLException e) {
+						e.printStackTrace();
+						Log.i(TAG, e.getMessage());
+					} catch (IOException e) {
+						e.printStackTrace();
+						Log.i(TAG, e.getMessage());
+					}
+				};
+			}.start();
+		} else {
+			myToast("请输入有效的手机号！");
+		}
+	}
+
+	/**
+	 * 验证手机号码
+	 * 
+	 * @param phoneNumber
+	 *            手机号码
+	 * @return boolean
+	 */
+	public static boolean checkPhoneNumber(String mobiles) {
+		Pattern p = Pattern
+				.compile("^((13[0-9])|(17[0-9])|(15[^4,\\D])|(18[0,5-9]))\\d{8}$");
+		Matcher m = p.matcher(mobiles);
+		// System.out.println(m.matches() + "---");
+		return m.matches();
+	}
+
+}
